@@ -1,34 +1,33 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-
 const mongoose = require("mongoose");
-
-mongoose.connect("mongodb://localhost/todo-demo", {
+const Todo = require("./models/todo")
+mongoose.connect(" mongodb://127.0.0.1:27017/todo-demo", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
-
-
 const app = express();
 const router = express.Router();
-// 라우터 자체만으로 완전 독립된 하나의 미니 app
-
-
-// "/" ==> /api/
 router.get("/", (req, res) => {
     res.send("Hi!");
 });
 
+
+router.post("/todos", async (req, res) => {
+    const { value } = req.body; //구조 분해 할당
+    const maxOrderTodo = await Todo.findOne().sort("-order").exec(); //exec가 promise값이기 때문에 await로 동작 대기
+    let order = 1;
+    if (maxOrderTodo) {
+        order = maxOrderTodo.order + 1;
+    }
+    const todo = new Todo({ value, order });
+    await todo.save();
+    res.send({ todo });
+});
 app.use("/api", bodyParser.json(), router);
 app.use(express.static("./assets"));
-
-// app.use("/api", express.json(), router);
-// app.use = 미들웨어를 붙일 수 있는 코드
-// api 요청을 받을때 /api 라는 경로가 맨 앞에 붙어있어야만 뒤에있는 express.json, router 미들웨어에 연결이 된다는 뜻
-// /api 로 들어올 때만 미들웨어에 연결!! 
-
 app.listen(8080, () => {
     console.log("서버가 켜졌어요!");
 });
