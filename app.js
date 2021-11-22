@@ -14,6 +14,10 @@ router.get("/", (req, res) => {
     res.send("Hi!");
 });
 
+router.get("/todos", async (req, res)=>{
+    const todos = await Todo.find().sort("-order").exec();
+    res.send({ todos });
+})
 
 router.post("/todos", async (req, res) => {
     const { value } = req.body; //구조 분해 할당
